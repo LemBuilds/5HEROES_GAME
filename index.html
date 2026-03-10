@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIVE — Marvel & DC Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#07070f;--s1:#11112a;--s2:#181830;
+  --marvel:#e62429;--dc:#0074e8;--gold:#ffd700;
+  --green:#30d158;--red:#ff3b30;--text:#f0f0ff;--muted:rgba(240,240,255,0.45);
+}
+html,body{width:100%;min-height:100vh;background:var(--bg);font-family:'Nunito',sans-serif;color:var(--text);overflow-x:hidden;}
+
+/* ── ANIMATED BG ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%,rgba(230,36,41,.08),transparent 55%),
+    radial-gradient(ellipse 70% 70% at 90% 80%,rgba(0,116,232,.08),transparent 55%),
+    radial-gradient(ellipse 50% 50% at 50% 50%,rgba(255,215,0,.03),transparent 65%);
+  animation:bgPulse 8s ease-in-out infinite alternate;
+}
+@keyframes bgPulse{from{opacity:.7}to{opacity:1}}
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) var(--delay,0s) ease-in-out infinite alternate;}
+@keyframes twinkle{from{opacity:.1;transform:scale(.8)}to{opacity:.8;transform:scale(1.2)}}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:16px;transition:opacity .4s,transform .4s;}
+.screen.out{opacity:0;pointer-events:none;transform:scale(.96);}
+
+/* ════════ NAME ENTRY SCREEN ════════ */
+#nameScreen{background:var(--bg);}
+.name-box{max-width:480px;width:100%;text-align:center;}
+.game-logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,15vw,110px);letter-spacing:12px;line-height:1;
+  background:linear-gradient(135deg,var(--marvel),var(--gold) 50%,var(--dc));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(255,215,0,.4));
+  animation:logoGlow 2s ease-in-out infinite alternate;}
+@keyframes logoGlow{from{filter:drop-shadow(0 0 30px rgba(255,215,0,.3))}to{filter:drop-shadow(0 0 60px rgba(255,215,0,.6))}}
+.logo-sub{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:6px;color:var(--muted);margin-bottom:36px;}
+.name-prompt{font-size:13px;font-weight:800;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;}
+.name-input-wrap{position:relative;margin-bottom:20px;}
+.name-input{width:100%;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:16px;
+  padding:16px 20px;font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;
+  color:var(--text);outline:none;text-align:center;transition:all .2s;}
+.name-input::placeholder{color:rgba(255,255,255,.2);}
+.name-input:focus{border-color:rgba(255,215,0,.5);box-shadow:0 0 0 3px rgba(255,215,0,.12),0 0 30px rgba(255,215,0,.1);}
+.begin-btn{width:100%;padding:18px;border:none;border-radius:16px;cursor:pointer;
+  font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:5px;color:#fff;
+  background:linear-gradient(135deg,var(--marvel),#ff6b35,var(--dc));
+  box-shadow:0 0 40px rgba(230,36,41,.4);transition:all .25s;position:relative;overflow:hidden;}
+.begin-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.15),transparent);}
+.begin-btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 60px rgba(230,36,41,.6);}
+.begin-btn:disabled{opacity:.35;pointer-events:none;}
+.how-mini{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px;}
+.how-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;
+  padding:10px 14px;font-size:12px;color:var(--muted);text-align:left;line-height:1.6;}
+.how-card strong{color:var(--gold);display:block;font-size:15px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+
+/* ════════ GAME SCREEN ════════ */
+#gameScreen{background:transparent;align-items:flex-start;overflow-y:auto;padding:0;}
+.game-wrap{position:relative;z-index:1;width:100%;max-width:680px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:0;}
+
+/* HEADER */
+.g-header{display:flex;align-items:center;justify-content:space-between;padding:14px 0 12px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:16px;}
+.g-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;
+  background:linear-gradient(135deg,var(--marvel),var(--gold),var(--dc));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.player-chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.09);border-radius:50px;padding:6px 14px;}
+.player-avatar{font-size:18px;}
+.player-name-hud{font-size:13px;font-weight:800;color:var(--text);}
+.score-chip{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);
+  border-radius:50px;padding:6px 16px;font-family:'Bebas Neue',sans-serif;font-size:22px;
+  color:var(--gold);text-shadow:0 0 12px rgba(255,215,0,.5);}
+
+/* PROGRESS */
+.progress-row{display:flex;gap:6px;margin-bottom:16px;}
+.prog-seg{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.07);transition:all .4s;}
+.prog-seg.done-win{background:var(--green);box-shadow:0 0 8px rgba(48,209,88,.5);}
+.prog-seg.done-loss{background:var(--red);}
+.prog-seg.active{background:var(--gold);box-shadow:0 0 10px rgba(255,215,0,.6);animation:segPulse 1.2s ease-in-out infinite alternate;}
+@keyframes segPulse{from{opacity:.7}to{opacity:1}}
+
+/* ROUND PIPS */
+.pips-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:18px;}
+.rpip{width:11px;height:11px;border-radius:50%;border:2px solid rgba(255,255,255,.18);transition:all .3s;}
+.rpip.win{background:var(--green);border-color:var(--green);box-shadow:0 0 8px rgba(48,209,88,.6);}
+.rpip.loss{background:var(--red);border-color:var(--red);}
+.rpip.cur{border-color:var(--gold);box-shadow:0 0 8px rgba(255,215,0,.5);animation:pipB .9s ease-in-out infinite alternate;}
+@keyframes pipB{from{transform:scale(1)}to{transform:scale(1.35)}}
+
+/* CHAR CARD */
+.char-card{background:var(--s1);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden;}
+.char-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.025) 0%,transparent 60%);pointer-events:none;}
+.uni-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:2px;margin-bottom:14px;}
+.uni-badge.marvel{background:rgba(230,36,41,.15);border:1px solid rgba(230,36,41,.4);color:var(--marvel);}
+.uni-badge.dc{background:rgba(0,116,232,.15);border:1px solid rgba(0,116,232,.4);color:var(--dc);}
+
+/* LETTER TILES */
+.tiles-wrap{display:flex;gap:6px;justify-content:center;margin-bottom:18px;flex-wrap:wrap;}
+.tile{width:44px;height:52px;background:var(--s2);border:2px solid rgba(255,255,255,.1);border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);transition:all .25s;}
+.tile.gap{width:12px;height:52px;background:transparent;border:none;}
+.tile.rev{background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(255,215,0,.07));
+  border-color:var(--gold);color:var(--gold);box-shadow:0 0 12px rgba(255,215,0,.25);
+  animation:tileFlip .35s cubic-bezier(.34,1.56,.64,1);}
+@keyframes tileFlip{0%{transform:rotateY(90deg) scale(.5);opacity:0}100%{transform:rotateY(0) scale(1);opacity:1}}
+
+/* CLUE */
+.clue-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 18px;margin-bottom:14px;}
+.clue-lbl{font-size:10px;font-weight:800;letter-spacing:3px;color:var(--muted);margin-bottom:6px;}
+.clue-txt{font-size:15px;font-weight:600;line-height:1.6;color:var(--text);}
+
+/* HINTS */
+.hints-row{display:flex;gap:8px;margin-bottom:0;}
+.hint-btn{flex:1;padding:10px 12px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.22);border-radius:12px;
+  cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;
+  color:rgba(255,215,0,.8);transition:all .2s;text-align:center;}
+.hint-btn:hover:not(:disabled){background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.45);transform:translateY(-1px);}
+.hint-btn:disabled{opacity:.3;cursor:not-allowed;}
+.hint-btn.used{background:rgba(255,59,48,.07);border-color:rgba(255,59,48,.25);color:rgba(255,100,80,.6);}
+.hint-cost{display:block;font-size:10px;color:var(--red);margin-top:2px;}
+.hint-reveal{background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.18);border-radius:12px;padding:11px 15px;margin-top:8px;display:none;}
+.hint-reveal.show{display:block;animation:fadeSlide .3s ease;}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.hint-rlbl{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--gold);margin-bottom:4px;}
+.hint-rtxt{font-size:14px;font-weight:700;}
+
+/* INPUT */
+.input-section{margin-top:16px;}
+.guess-row{display:flex;gap:10px;}
+.guess-input{flex:1;background:var(--s1);border:2px solid rgba(255,255,255,.1);border-radius:14px;
+  padding:14px 18px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--text);outline:none;transition:all .2s;}
+.guess-input::placeholder{color:var(--muted);}
+.guess-input:focus{border-color:rgba(255,215,0,.45);box-shadow:0 0 0 3px rgba(255,215,0,.1);}
+.guess-input.shake{animation:shk .4s ease;}
+@keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.submit-btn{padding:14px 22px;border:none;border-radius:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--marvel),var(--dc));color:#fff;cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 16px rgba(230,36,41,.3);position:relative;overflow:hidden;white-space:nowrap;}
+.submit-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.15),transparent);}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(230,36,41,.4);}
+.attempts-row{display:flex;align-items:center;gap:7px;margin-top:10px;}
+.att-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.14);transition:all .2s;}
+.att-dot.used{background:var(--red);}
+.att-lbl{font-size:11px;color:var(--muted);letter-spacing:1px;font-weight:700;}
+
+/* ════════ ROUND RESULT OVERLAY ════════ */
+#roundOverlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .3s;padding:16px;}
+#roundOverlay.show{opacity:1;pointer-events:all;}
+.rbox{background:var(--s1);border:1px solid rgba(255,255,255,.1);border-radius:28px;
+  padding:28px 32px;max-width:460px;width:100%;text-align:center;
+  box-shadow:0 0 60px rgba(0,0,0,.8);
+  transform:scale(.9);transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+#roundOverlay.show .rbox{transform:scale(1);}
+
+/* CHARACTER IMAGE */
+.char-img-wrap{width:140px;height:140px;border-radius:50%;margin:0 auto 16px;position:relative;overflow:hidden;
+  box-shadow:0 0 0 3px rgba(255,215,0,.4),0 0 40px rgba(255,215,0,.2);}
+.char-img-wrap.marvel-ring{box-shadow:0 0 0 3px rgba(230,36,41,.5),0 0 40px rgba(230,36,41,.25);}
+.char-img-wrap.dc-ring{box-shadow:0 0 0 3px rgba(0,116,232,.5),0 0 40px rgba(0,116,232,.25);}
+.char-img{width:100%;height:100%;object-fit:cover;display:block;}
+.char-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px;background:var(--s2);}
+
+/* MEMOJI BURST */
+.memoji-burst{display:flex;justify-content:center;gap:6px;margin-bottom:12px;font-size:28px;}
+.memoji{display:inline-block;animation:memojiPop var(--d,.5s) var(--delay,0s) cubic-bezier(.34,1.8,.64,1) both;}
+@keyframes memojiPop{0%{transform:scale(0) rotate(-20deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+
+.r-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:4px;margin-bottom:4px;}
+.r-greeting{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.r-answer{font-size:13px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;}
+.r-answer strong{color:var(--gold);font-size:16px;display:block;margin-top:3px;}
+.pts-big{font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:1;margin:8px 0 4px;}
+.pts-big.pos{color:var(--gold);text-shadow:0 0 24px rgba(255,215,0,.7);}
+.pts-big.zero{color:var(--muted);}
+.pts-break{font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:22px;line-height:2;}
+.pts-break span{color:var(--text);font-weight:700;}
+.next-btn{background:linear-gradient(135deg,var(--marvel),var(--dc));border:none;border-radius:14px;
+  padding:14px 44px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;
+  color:#fff;cursor:pointer;box-shadow:0 0 24px rgba(230,36,41,.4);transition:all .2s;position:relative;overflow:hidden;}
+.next-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.15),transparent);}
+.next-btn:hover{transform:translateY(-2px) scale(1.03);}
+
+/* ════════ FINAL SCREEN ════════ */
+#finalScreen{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:radial-gradient(ellipse at center,rgba(20,10,50,.98),rgba(7,7,15,.99));
+  backdrop-filter:blur(16px);opacity:0;pointer-events:none;transition:opacity .4s;}
+#finalScreen.show{opacity:1;pointer-events:all;}
+.fbox{max-width:540px;width:100%;background:var(--s1);border:1px solid rgba(255,215,0,.2);border-radius:30px;
+  padding:36px 40px;text-align:center;box-shadow:0 0 80px rgba(255,215,0,.08);}
+.f-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,8vw,64px);letter-spacing:6px;
+  background:linear-gradient(135deg,var(--marvel),var(--gold),var(--dc));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:2px;}
+.f-player{font-size:14px;color:var(--muted);letter-spacing:2px;margin-bottom:20px;}
+.f-score{font-family:'Bebas Neue',sans-serif;font-size:80px;line-height:1;color:var(--gold);text-shadow:0 0 40px rgba(255,215,0,.7);margin-bottom:2px;}
+.f-max{font-size:14px;color:var(--muted);letter-spacing:2px;margin-bottom:20px;}
+.rank-badge{display:inline-block;padding:8px 24px;border-radius:50px;font-weight:800;font-size:15px;letter-spacing:2px;margin-bottom:22px;}
+.rank-S{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;}
+.rank-A{background:linear-gradient(135deg,#30d158,#007aff);color:#fff;}
+.rank-B{background:linear-gradient(135deg,#007aff,#5856d6);color:#fff;}
+.rank-C{background:linear-gradient(135deg,#8e8e93,#636366);color:#fff;}
+.recap{display:flex;flex-direction:column;gap:7px;margin-bottom:24px;text-align:left;}
+.recap-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;
+  border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);}
+.recap-char{font-size:14px;font-weight:700;}
+.recap-pts{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);}
+.recap-pts.z{color:var(--muted);}
+.play-again-btn{width:100%;padding:16px;border:none;border-radius:16px;cursor:pointer;
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:#fff;
+  background:linear-gradient(135deg,var(--marvel),#ff6b35,var(--dc));
+  box-shadow:0 0 30px rgba(230,36,41,.4);transition:all .2s;position:relative;overflow:hidden;}
+.play-again-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.15),transparent);}
+.play-again-btn:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(230,36,41,.6);}
+
+/* FEEDBACK */
+.feedback{position:fixed;top:18px;left:50%;transform:translateX(-50%);
+  padding:11px 22px;border-radius:50px;font-size:14px;font-weight:800;letter-spacing:1px;
+  z-index:100;pointer-events:none;opacity:0;transition:opacity .2s;white-space:nowrap;}
+.feedback.show{opacity:1;}
+.feedback.ok{background:var(--green);color:#000;box-shadow:0 0 30px rgba(48,209,88,.5);}
+.feedback.err{background:var(--red);color:#fff;box-shadow:0 0 20px rgba(255,59,48,.4);}
+.feedback.tip{background:var(--gold);color:#000;box-shadow:0 0 20px rgba(255,215,0,.4);}
+
+/* MUSIC BTN */
+#musicBtn{position:fixed;top:14px;right:14px;z-index:200;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:7px 13px;cursor:pointer;font-size:17px;transition:all .2s;}
+#musicBtn:hover{background:rgba(255,255,255,.13);}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Music toggle -->
+<button id="musicBtn" onclick="toggleMusic()">🔊</button>
+
+<!-- Feedback toast -->
+<div class="feedback" id="feedback"></div>
+
+<!-- ═══════ NAME SCREEN ═══════ -->
+<div class="screen" id="nameScreen">
+  <div class="name-box">
+    <div class="game-logo">FIVE</div>
+    <div class="logo-sub">MARVEL &amp; DC · CHARACTER CHALLENGE</div>
+    <p class="name-prompt">Enter your hero name to begin</p>
+    <div class="name-input-wrap">
+      <input class="name-input" id="nameInput" type="text" maxlength="20"
+        placeholder="Your name..." autocomplete="off" spellcheck="false"
+        onkeydown="if(event.key==='Enter')startGame()"
+        oninput="document.getElementById('beginBtn').disabled=!this.value.trim()">
+    </div>
+    <button class="begin-btn" id="beginBtn" onclick="startGame()" disabled>⚡ ENTER THE MULTIVERSE ⚡</button>
+    <div class="how-mini">
+      <div class="how-card"><strong>5 ROUNDS</strong>One character per round from Marvel &amp; DC universe</div>
+      <div class="how-card"><strong>5 ATTEMPTS</strong>Type the full name — each wrong guess reveals a letter</div>
+      <div class="how-card"><strong>5 POINTS MAX</strong>Score drops with each attempt or hint used</div>
+      <div class="how-card"><strong>2 HINTS</strong>Each hint costs 1 point but reveals more info</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ GAME SCREEN ═══════ -->
+<div class="screen out" id="gameScreen">
+  <div class="game-wrap">
+    <div class="g-header">
+      <div class="g-logo">FIVE</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="player-chip">
+          <span class="player-avatar" id="playerAvatar">🦸</span>
+          <span class="player-name-hud" id="playerNameHud">Hero</span>
+        </div>
+        <div class="score-chip" id="scoreChip">0</div>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="progress-row" id="progressRow">
+      <div class="prog-seg active" id="ps0"></div>
+      <div class="prog-seg" id="ps1"></div>
+      <div class="prog-seg" id="ps2"></div>
+      <div class="prog-seg" id="ps3"></div>
+      <div class="prog-seg" id="ps4"></div>
+    </div>
+    <!-- Pips -->
+    <div class="pips-row" id="pipsRow">
+      <div class="rpip cur" id="rp0"></div>
+      <div class="rpip" id="rp1"></div>
+      <div class="rpip" id="rp2"></div>
+      <div class="rpip" id="rp3"></div>
+      <div class="rpip" id="rp4"></div>
+    </div>
+    <!-- Character card -->
+    <div class="char-card">
+      <div class="uni-badge marvel" id="uniBadge">⚡ MARVEL</div>
+      <div class="tiles-wrap" id="tilesWrap"></div>
+      <div class="clue-box">
+        <div class="clue-lbl">🔍 WHO AM I?</div>
+        <div class="clue-txt" id="clueText">...</div>
+      </div>
+      <div class="hints-row">
+        <button class="hint-btn" id="h1btn" onclick="useHint(1)">💡 HINT 1<span class="hint-cost">−1 point</span></button>
+        <button class="hint-btn" id="h2btn" onclick="useHint(2)">💡 HINT 2<span class="hint-cost">−1 point</span></button>
+      </div>
+      <div class="hint-reveal" id="h1rev"><div class="hint-rlbl">HINT 1</div><div class="hint-rtxt" id="h1txt"></div></div>
+      <div class="hint-reveal" id="h2rev"><div class="hint-rlbl">HINT 2</div><div class="hint-rtxt" id="h2txt"></div></div>
+    </div>
+    <!-- Input -->
+    <div class="input-section">
+      <div class="guess-row">
+        <input class="guess-input" id="guessInput" type="text"
+          placeholder="Type the full character name…"
+          autocomplete="off" autocorrect="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter')submitGuess()">
+        <button class="submit-btn" onclick="submitGuess()">GUESS</button>
+      </div>
+      <div class="attempts-row">
+        <div class="att-dot" id="ad0"></div>
+        <div class="att-dot" id="ad1"></div>
+        <div class="att-dot" id="ad2"></div>
+        <div class="att-dot" id="ad3"></div>
+        <div class="att-dot" id="ad4"></div>
+        <span class="att-lbl" id="attLbl">5 ATTEMPTS REMAINING</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ROUND OVERLAY ═══════ -->
+<div id="roundOverlay">
+  <div class="rbox">
+    <div class="memoji-burst" id="memojiBurst"></div>
+    <div class="char-img-wrap" id="charImgWrap">
+      <div class="char-img-fallback" id="charImgFallback">?</div>
+    </div>
+    <div class="r-title" id="rTitle">CORRECT!</div>
+    <div class="r-greeting" id="rGreeting"></div>
+    <div class="r-answer">The answer was<strong id="rAnswer"></strong></div>
+    <div class="pts-big pos" id="ptsBig">+5</div>
+    <div class="pts-break" id="ptsBreak"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextRound()">NEXT ROUND →</button>
+  </div>
+</div>
+
+<!-- ═══════ FINAL SCREEN ═══════ -->
+<div id="finalScreen">
+  <div class="fbox">
+    <div class="f-title">GAME OVER</div>
+    <div class="f-player" id="fPlayer">Well played, Hero!</div>
+    <div class="f-score" id="fScore">0</div>
+    <div class="f-max">OUT OF 25 POINTS</div>
+    <div class="rank-badge rank-C" id="rankBadge">RANK C</div>
+    <div class="recap" id="recap"></div>
+    <button class="play-again-btn" onclick="resetGame()">⚡ PLAY AGAIN ⚡</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════
+// STARS
+// ═══════════════════════
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2+.4;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*4}s;opacity:${Math.random()*.5}`;
+    c.appendChild(s);
+  }
+})();
+
+// ═══════════════════════
+// AUDIO — Upbeat Marvel/DC Fighting Theme
+// ═══════════════════════
+let AC, musicOn=true, musicNodes=[], musicTimers=[];
+
+function initAudio(){
+  if(AC) return;
+  AC=new(window.AudioContext||window.webkitAudioContext)();
+  startBGM();
+}
+
+function startBGM(){
+  if(!AC||!musicOn) return;
+  stopBGM();
+  const master=AC.createGain(); master.gain.value=0.18; master.connect(AC.destination);
+  const comp=AC.createDynamicsCompressor(); comp.connect(master);
+  const BPM=152, b=60/BPM;
+
+  // === KICK ===
+  const kickPat=[1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0];
+  let ki=0;
+  function kick(){
+    if(!musicOn) return;
+    if(kickPat[ki%16]){
+      const o=AC.createOscillator(),g=AC.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(160,AC.currentTime); o.frequency.exponentialRampToValueAtTime(30,AC.currentTime+0.12);
+      g.gain.setValueAtTime(1,AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.2);
+      o.connect(g); g.connect(comp); o.start(); o.stop(AC.currentTime+0.22);
+    }
+    ki++; musicTimers.push(setTimeout(kick, b*500));
+  } kick();
+
+  // === SNARE ===
+  const snarePat=[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,1];
+  let si=0;
+  function snare(){
+    if(!musicOn) return;
+    if(snarePat[si%16]){
+      const buf=AC.createBuffer(1,AC.sampleRate*.15,AC.sampleRate);
+      const d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.8);
+      const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
+      f.type='highpass'; f.frequency.value=1500;
+      src.buffer=buf; g.gain.setValueAtTime(.55,AC.currentTime); g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.18);
+      src.connect(f); f.connect(g); g.connect(comp); src.start(); musicNodes.push(src);
+    }
+    si++; musicTimers.push(setTimeout(snare, b*500));
+  } snare();
+
+  // === HI-HAT ===
+  const hatPat=[1,1,0,1,1,1,0,1,1,0,1,1,0,1,1,1];
+  let hi=0;
+  function hat(){
+    if(!musicOn) return;
+    if(hatPat[hi%16]){
+      const buf=AC.createBuffer(1,AC.sampleRate*.035,AC.sampleRate);
+      const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+      const src=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();
+      f.type='bandpass'; f.frequency.value=9000; f.Q.value=.5;
+      src.buffer=buf; g.gain.value=.15; src.connect(f); f.connect(g); g.connect(comp); src.start(); musicNodes.push(src);
+    }
+    hi++; musicTimers.push(setTimeout(hat, b*250));
+  } hat();
+
+  // === BASS ===
+  const bassSeq=[55,55,82,55,65,55,73,55, 49,49,73,49,65,49,73,55];
+  let bi=0;
+  function bass(){
+    if(!musicOn) return;
+    const freq=bassSeq[bi%bassSeq.length];
+    const o=AC.createOscillator(),g=AC.createGain(),dist=AC.createWaveShaper();
+    const c=new Float32Array(256); for(let i=0;i<256;i++){const x=i*2/256-1;c[i]=Math.tanh(x*3);}
+    dist.curve=c; o.type='square'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0,AC.currentTime); g.gain.linearRampToValueAtTime(.5,AC.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+b*.85);
+    o.connect(dist); dist.connect(g); g.connect(comp); o.start(); o.stop(AC.currentTime+b);
+    musicNodes.push(o); bi++; musicTimers.push(setTimeout(bass,b*500));
+  } bass();
+
+  // === MELODY (heroic pentatonic) ===
+  const melSeq=[
+    523,659,784,1047,880,784,659,523,
+    587,784,880,1175,1047,880,784,587,
+    494,659,784,988,880,784,659,494,
+    523,659,784,1047,880,659,523,440
+  ];
+  let mi=0;
+  function mel(){
+    if(!musicOn) return;
+    const f=melSeq[mi%melSeq.length];
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type='triangle'; o.frequency.value=f;
+    g.gain.setValueAtTime(0,AC.currentTime); g.gain.linearRampToValueAtTime(.09,AC.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+b*1.8);
+    o.connect(g); g.connect(comp); o.start(); o.stop(AC.currentTime+b*2);
+    musicNodes.push(o); mi++; musicTimers.push(setTimeout(mel,b*500));
+  } mel();
+
+  // === CHORD PAD (atmospheric) ===
+  [[261,329,392],[293,370,440],[247,311,370]].forEach((ch,ci)=>{
+    ch.forEach(freq=>{
+      const o=AC.createOscillator(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();
+      o.type='sine'; o.frequency.value=freq; g.gain.value=.03;
+      lfo.frequency.value=.6; lg.gain.value=.015;
+      lfo.connect(lg); lg.connect(g.gain); lfo.start();
+      o.connect(g); g.connect(comp); o.start(AC.currentTime+ci*b*8);
+      musicNodes.push(o,lfo);
+    });
+  });
+}
+
+function stopBGM(){
+  musicNodes.forEach(n=>{try{n.stop&&n.stop(AC&&AC.currentTime||0)}catch(e){}});
+  musicNodes=[];
+  musicTimers.forEach(t=>clearTimeout(t));
+  musicTimers=[];
+}
+
+function toggleMusic(){
+  musicOn=!musicOn;
+  document.getElementById('musicBtn').textContent=musicOn?'🔊':'🔇';
+  if(musicOn){if(!AC)initAudio();else startBGM();}
+  else stopBGM();
+}
+
+function sfx(t){
+  if(!AC) return;
+  if(t==='correct'){
+    [523,659,784,1047,1319].forEach((f,i)=>{
+      const o=AC.createOscillator(),g=AC.createGain();
+      o.frequency.value=f; g.gain.setValueAtTime(0,AC.currentTime+i*.07);
+      g.gain.linearRampToValueAtTime(.22,AC.currentTime+i*.07+.04);
+      g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+i*.07+.22);
+      o.connect(g); g.connect(AC.destination); o.start(AC.currentTime+i*.07); o.stop(AC.currentTime+i*.07+.25);
+    });
+  } else if(t==='wrong'){
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(220,AC.currentTime); o.frequency.exponentialRampToValueAtTime(110,AC.currentTime+.12);
+    g.gain.setValueAtTime(.25,AC.currentTime); g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.15);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+.18);
+  } else if(t==='hint'){
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.frequency.value=880; g.gain.setValueAtTime(.12,AC.currentTime); g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.1);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+.12);
+  } else if(t==='fail'){
+    [330,294,261].forEach((f,i)=>{
+      const o=AC.createOscillator(),g=AC.createGain();
+      o.frequency.value=f; g.gain.setValueAtTime(.2,AC.currentTime+i*.1); g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+i*.1+.18);
+      o.connect(g); g.connect(AC.destination); o.start(AC.currentTime+i*.1); o.stop(AC.currentTime+i*.1+.2);
+    });
+  }
+}
+
+// ═══════════════════════
+// CHARACTER DATA
+// ═══════════════════════
+const CHARS=[
+  {name:"SPIDER-MAN",universe:"marvel",emoji:"🕷️",
+   img:"https://upload.wikimedia.org/wikipedia/en/2/21/Web_of_Spider-Man_Vol_1_129-1.png",
+   clue:"A teenager bitten by a radioactive spider who protects New York City with web-slinging and a strong moral compass.",
+   hint1:"His real name is Peter Parker, a high school student and photographer.",
+   hint2:"His famous motto: 'With great power comes great responsibility.'",
+   firstIdx:[0,7],
+   memojis:['🎉','⭐','🕷️','🏆','🎊'],
+   greetings:["Friendly neighbourhood {name}!", "Your Spidey senses are good, {name}!", "Web-slinging genius, {name}!"]},
+  {name:"IRON MAN",universe:"marvel",emoji:"🦾",
+   img:"https://upload.wikimedia.org/wikipedia/en/4/47/Iron_Man_%28circa_2018%29.png",
+   clue:"A genius billionaire who built a high-tech suit of armour in a cave and used it to become Earth's first Avenger.",
+   hint1:"He founded the Avengers and his company is Stark Industries.",
+   hint2:"His real name is Tony Stark. His arc reactor powers the suit.",
+   firstIdx:[0,5],
+   memojis:['🔥','⚙️','🦾','💥','🏅'],
+   greetings:["I am Iron {name}!", "Genius-level answer, {name}!", "Stark-level brilliance, {name}!"]},
+  {name:"THANOS",universe:"marvel",emoji:"💜",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/7/7d/Thanos_Marvel_Comics_character.png/220px-Thanos_Marvel_Comics_character.png",
+   clue:"A cosmic warlord who believes erasing half of all life will save the universe from itself. He seeks ultimate power.",
+   hint1:"He seeks the six Infinity Stones to power a golden gauntlet.",
+   hint2:"He is the father of Gamora and Nebula, and comes from Saturn's moon Titan.",
+   firstIdx:[0],
+   memojis:['😤','💜','🌌','⚡','🔮'],
+   greetings:["Perfectly balanced, {name}!", "You snapped that answer, {name}!", "Titan-level knowledge, {name}!"]},
+  {name:"WOLVERINE",universe:"marvel",emoji:"⚔️",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/9/97/Wolverine_%28ROM%29.png/220px-Wolverine_%28ROM%29.png",
+   clue:"A brooding mutant with an unbreakable metal skeleton and retractable razor-sharp claws, who heals from any wound.",
+   hint1:"His bones and claws are coated in adamantium, the strongest metal on Earth.",
+   hint2:"His real name is James Howlett, but he goes by Logan. He's a member of the X-Men.",
+   firstIdx:[0],
+   memojis:['💪','⚔️','🐺','🏆','🔥'],
+   greetings:["Best there is, {name}!", "Snikt! You got it, {name}!", "Adamantium mind, {name}!"]},
+  {name:"BLACK WIDOW",universe:"marvel",emoji:"🕸️",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/6/60/Black_Widow_character_image.jpg/220px-Black_Widow_character_image.jpg",
+   clue:"A master spy and assassin trained from childhood in the Red Room, who later defects to become a superhero.",
+   hint1:"She works for S.H.I.E.L.D. and is a founding Avenger.",
+   hint2:"Her real name is Natasha Romanoff. She's from Russia.",
+   firstIdx:[0,6],
+   memojis:['🕸️','🦸‍♀️','⭐','🎯','✨'],
+   greetings:["Deadly accurate, {name}!", "S.H.I.E.L.D. would recruit you, {name}!", "Spy-level skills, {name}!"]},
+  {name:"BATMAN",universe:"dc",emoji:"🦇",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/1/1b/Batman_%28circa_2016%29.png/220px-Batman_%28circa_2016%29.png",
+   clue:"A billionaire who watched his parents die as a child and spent his life mastering every skill to fight crime without superpowers.",
+   hint1:"He is known as the World's Greatest Detective and operates in Gotham City.",
+   hint2:"His real name is Bruce Wayne. His butler is Alfred.",
+   firstIdx:[0],
+   memojis:['🦇','🌙','🏆','🎉','⭐'],
+   greetings:["I am the night, {name}!", "Detective skills worthy of Bruce, {name}!", "The Dark Knight approves, {name}!"]},
+  {name:"SUPERMAN",universe:"dc",emoji:"🦸",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/e/ea/Superman_Man_of_Steel_Suit.jpg/220px-Superman_Man_of_Steel_Suit.jpg",
+   clue:"An alien rocketed to Earth as a baby, powered by yellow sunlight, who became humanity's greatest and most iconic protector.",
+   hint1:"He works as a journalist at the Daily Planet and his weakness is Kryptonite.",
+   hint2:"His real name is Clark Kent, born Kal-El of the planet Krypton.",
+   firstIdx:[0],
+   memojis:['🦸','⚡','🌟','💥','🏅'],
+   greetings:["Up, up and away, {name}!", "Man of Steel knowledge, {name}!", "Kryptonian-level answer, {name}!"]},
+  {name:"WONDER WOMAN",universe:"dc",emoji:"⚡",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Wonder_Woman.jpg/220px-Wonder_Woman.jpg",
+   clue:"A warrior princess from a hidden island of immortal female warriors who comes to the world of men as an ambassador of peace.",
+   hint1:"She wields a magic lasso that forces total truth on anyone it binds.",
+   hint2:"Her real name is Diana. She is from Themyscira and is a daughter of Zeus.",
+   firstIdx:[0,7],
+   memojis:['⚡','🌟','🏹','🏆','👸'],
+   greetings:["You have the wisdom of Athena, {name}!", "Themysciran knowledge, {name}!", "Diana would be proud, {name}!"]},
+  {name:"THE JOKER",universe:"dc",emoji:"🃏",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/9/9d/Joker_poster_art.jpg/220px-Joker_poster_art.jpg",
+   clue:"A criminal mastermind in clown makeup whose only goals are chaos, destruction, and proving that anyone can lose their mind.",
+   hint1:"He is Batman's greatest nemesis and his origin is intentionally mysterious.",
+   hint2:"He is the self-styled 'Clown Prince of Crime' and his real name is never confirmed.",
+   firstIdx:[0,4],
+   memojis:['🃏','😂','🎭','🌀','🎉'],
+   greetings:["Why so smart, {name}?", "Chaos and cleverness, {name}!", "The Joker would laugh, {name}!"]},
+  {name:"THE FLASH",universe:"dc",emoji:"⚡",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/3/35/Barry_Allen_The_Flash.png/220px-Barry_Allen_The_Flash.png",
+   clue:"A forensic scientist struck by lightning during a freak accident who gains the power to move at speeds beyond the speed of light.",
+   hint1:"He is the fastest person alive and a founding member of the Justice League.",
+   hint2:"His real name is Barry Allen and he runs the Central City Police's crime lab.",
+   firstIdx:[0,4],
+   memojis:['⚡','💨','🏃','🌟','🎯'],
+   greetings:["Speed of thought, {name}!", "The Fastest Mind Alive, {name}!", "Barry Allen tips his hat, {name}!"]},
+  {name:"CAPTAIN AMERICA",universe:"marvel",emoji:"🛡️",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/3/35/Captain_America_Vol_7_1_Adi_Granov_Variant.jpg/220px-Captain_America_Vol_7_1_Adi_Granov_Variant.jpg",
+   clue:"A small but brave young man transformed into the ultimate soldier by a secret serum, who became a symbol of freedom wielding an unbreakable shield.",
+   hint1:"He was frozen in ice for nearly 70 years after World War II.",
+   hint2:"His real name is Steve Rogers. His shield is made of vibranium.",
+   firstIdx:[0,8],
+   memojis:['🛡️','🇺🇸','⭐','💪','🏆'],
+   greetings:["I can do this all day, {name}!", "Star-Spangled genius, {name}!", "Cap would call you a hero, {name}!"]},
+  {name:"AQUAMAN",universe:"dc",emoji:"🌊",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Aquaman_%28New_52%29.png/220px-Aquaman_%28New_52%29.png",
+   clue:"The King of the seven seas — half-human, half-Atlantean — who rules the oceans, commands all sea life, and wields a legendary trident.",
+   hint1:"He is a founding member of the Justice League.",
+   hint2:"His real name is Arthur Curry. He was raised on land before discovering his Atlantean heritage.",
+   firstIdx:[0],
+   memojis:['🌊','🐠','⭐','🔱','🏆'],
+   greetings:["Ocean deep knowledge, {name}!", "King of the quiz, {name}!", "Atlantis welcomes you, {name}!"]},
+  {name:"DOCTOR STRANGE",universe:"marvel",emoji:"🔮",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/2/24/Doctor_Strange_%28vol._4%29_1_cover_%28cropped%29.png/220px-Doctor_Strange_%28vol._4%29_1_cover_%28cropped%29.png",
+   clue:"A brilliant but arrogant surgeon whose hands are destroyed in a crash, leading him to seek a cure and instead discover the world of magic.",
+   hint1:"He becomes the Sorcerer Supreme, Earth's master of the mystic arts.",
+   hint2:"His real name is Stephen Strange. He guards the Time Stone.",
+   firstIdx:[0,7],
+   memojis:['🔮','✨','🌀','🎭','⭐'],
+   greetings:["Sorcerer Supreme knowledge, {name}!", "The multiverse bows to you, {name}!", "Strange but brilliant, {name}!"]},
+  {name:"LEX LUTHOR",universe:"dc",emoji:"🧠",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/7/70/Lex_Luthor_Romita.png/220px-Lex_Luthor_Romita.png",
+   clue:"The world's most brilliant scientist and businessman who despises Superman and believes humanity needs no alien saviors.",
+   hint1:"He is Superman's greatest nemesis and has run for President of the USA.",
+   hint2:"He runs LexCorp, one of the world's most powerful corporations.",
+   firstIdx:[0,4],
+   memojis:['🧠','🌍','💰','⚡','🏆'],
+   greetings:["You're as smart as Lex, {name}!", "Galaxy-brain answer, {name}!", "LexCorp would hire you, {name}!"]},
+  {name:"BLACK PANTHER",universe:"marvel",emoji:"🐾",
+   img:"https://upload.wikimedia.org/wikipedia/en/thumb/1/10/Black_Panther_%28T%27Challa%29.png/220px-Black_Panther_%28T%27Challa%29.png",
+   clue:"The King of a hidden African nation that sits atop the world's entire supply of the most advanced metal on Earth.",
+   hint1:"His nation is Wakanda, and the metal is Vibranium — used to make Captain America's shield.",
+   hint2:"His real name is T'Challa. He is both a king and a warrior.",
+   firstIdx:[0,6],
+   memojis:['🐾','👑','⭐','💜','🌟'],
+   greetings:["Wakanda forever, {name}!", "T'Challa salutes you, {name}!", "Royal-level answer, {name}!"]},
+];
+
+// ═══════════════════════
+// STATE
+// ═══════════════════════
+let playerName='Hero', gameChars=[], gs={};
+
+function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+
+function startGame(){
+  const n=document.getElementById('nameInput').value.trim();
+  if(!n) return;
+  playerName=n;
+  initAudio();
+  // Pick 5 chars alternating Marvel/DC
+  const mv=shuffle(CHARS.filter(c=>c.universe==='marvel'));
+  const dc=shuffle(CHARS.filter(c=>c.universe==='dc'));
+  gameChars=[];
+  for(let i=0;i<5;i++){
+    if(i%2===0&&mv.length) gameChars.push(mv.shift());
+    else if(dc.length) gameChars.push(dc.shift());
+    else if(mv.length) gameChars.push(mv.shift());
+  }
+  gameChars=shuffle(gameChars);
+  gs={round:0,total:0,scores:[],chars:[],attempts:0,hints:0,revealed:new Set()};
+  document.getElementById('nameScreen').classList.add('out');
+  setTimeout(()=>{document.getElementById('gameScreen').classList.remove('out');},350);
+  document.getElementById('playerNameHud').textContent=playerName;
+  document.getElementById('playerAvatar').textContent=getAvatar(playerName);
+  loadRound();
+}
+
+function getAvatar(name){
+  const avs=['🦸','🦹','🧙','🥷','🦊','🐉','⚡','🌟'];
+  return avs[name.charCodeAt(0)%avs.length];
+}
+
+function loadRound(){
+  const ch=gameChars[gs.round];
+  gs.attempts=0; gs.hints=0; gs.revealed=new Set();
+  document.getElementById('guessInput').value='';
+  document.getElementById('guessInput').disabled=false;
+  document.getElementById('guessInput').focus();
+  // First letters + spaces/hyphens
+  ch.firstIdx.forEach(i=>gs.revealed.add(i));
+  for(let i=0;i<ch.name.length;i++){if(ch.name[i]===' '||ch.name[i]==='-') gs.revealed.add(i);}
+  // Universe badge
+  const b=document.getElementById('uniBadge');
+  b.className='uni-badge '+ch.universe;
+  b.textContent=ch.universe==='marvel'?'⚡ MARVEL':'🦇 DC';
+  document.getElementById('clueText').textContent=ch.clue;
+  document.getElementById('h1txt').textContent=ch.hint1;
+  document.getElementById('h2txt').textContent=ch.hint2;
+  resetHintUI();
+  renderTiles();
+  updateAttempts();
+  updateProgress();
+}
+
+function resetHintUI(){
+  ['h1btn','h2btn'].forEach(id=>{const b=document.getElementById(id);b.disabled=false;b.classList.remove('used');});
+  ['h1rev','h2rev'].forEach(id=>document.getElementById(id).classList.remove('show'));
+}
+
+function renderTiles(){
+  const wrap=document.getElementById('tilesWrap');
+  wrap.innerHTML='';
+  const name=gameChars[gs.round].name;
+  name.split('').forEach((ch,i)=>{
+    const t=document.createElement('div');
+    if(ch===' '){t.className='tile gap';}
+    else if(ch==='-'){t.className='tile gap';t.style.width='18px';t.textContent='-';t.style.color='var(--muted)';t.style.border='none';t.style.background='transparent';}
+    else{
+      const rev=gs.revealed.has(i);
+      t.className='tile'+(rev?' rev':'');
+      t.textContent=rev?ch:'';
+      t.id='t'+i;
+    }
+    wrap.appendChild(t);
+  });
+}
+
+function updateAttempts(){
+  const rem=5-gs.attempts;
+  for(let i=0;i<5;i++) document.getElementById('ad'+i).className='att-dot'+(i<gs.attempts?' used':'');
+  document.getElementById('attLbl').textContent=rem===1?'⚠️ LAST ATTEMPT!':`${rem} ATTEMPT${rem!==1?'S':''} REMAINING`;
+}
+
+function updateProgress(){
+  document.getElementById('scoreChip').textContent=gs.total;
+  document.getElementById('roundDisplay') && (document.getElementById('roundDisplay').textContent=(gs.round+1)+'/5');
+  for(let i=0;i<5;i++){
+    const ps=document.getElementById('ps'+i);
+    const rp=document.getElementById('rp'+i);
+    if(i<gs.round){
+      const w=gs.scores[i]>0;
+      ps.className='prog-seg '+(w?'done-win':'done-loss');
+      rp.className='rpip '+(w?'win':'loss');
+    } else if(i===gs.round){
+      ps.className='prog-seg active';
+      rp.className='rpip cur';
+    } else {
+      ps.className='prog-seg';
+      rp.className='rpip';
+    }
+  }
+}
+
+// ═══════════════════════
+// HINTS
+// ═══════════════════════
+function useHint(n){
+  if(gs.hints>=2) return;
+  gs.hints++;
+  sfx('hint');
+  const btn=document.getElementById('h'+n+'btn');
+  btn.disabled=true; btn.classList.add('used');
+  document.getElementById('h'+n+'rev').classList.add('show');
+  revealRandom();
+  showFeedback('💡 Hint revealed! −1 point penalty','tip');
+}
+
+function revealRandom(){
+  const name=gameChars[gs.round].name;
+  const pool=[];
+  for(let i=0;i<name.length;i++) if(name[i]!==' '&&name[i]!=='-'&&!gs.revealed.has(i)) pool.push(i);
+  if(pool.length){const idx=pool[Math.floor(Math.random()*pool.length)];gs.revealed.add(idx);}
+  renderTiles();
+}
+
+// ═══════════════════════
+// GUESSING
+// ═══════════════════════
+function submitGuess(){
+  const inp=document.getElementById('guessInput');
+  const guess=inp.value.trim().toUpperCase();
+  if(!guess) return;
+  const ch=gameChars[gs.round];
+  const norm=s=>s.replace(/^THE\s+/,'').replace(/[-\s]/g,' ').trim();
+  const correct=norm(guess)===norm(ch.name)||guess===ch.name;
+  if(correct){
+    for(let i=0;i<ch.name.length;i++) gs.revealed.add(i);
+    renderTiles();
+    const pts=calcPts();
+    sfx('correct');
+    endRound(true,pts);
+  } else {
+    gs.attempts++;
+    updateAttempts();
+    revealMatchingLetter(guess,ch.name);
+    inp.value='';
+    inp.classList.add('shake');
+    setTimeout(()=>inp.classList.remove('shake'),400);
+    if(gs.attempts>=5){
+      for(let i=0;i<ch.name.length;i++) gs.revealed.add(i);
+      renderTiles();
+      sfx('fail');
+      endRound(false,0);
+    } else {
+      sfx('wrong');
+      showFeedback('❌ Not quite! Try again.','err');
+    }
+  }
+}
+
+function revealMatchingLetter(guess,answer){
+  const gc=guess.replace(/\s/g,'').split('');
+  const pool=[];
+  for(let i=0;i<answer.length;i++){
+    if(answer[i]!==' '&&answer[i]!=='-'&&!gs.revealed.has(i)){
+      if(gc.includes(answer[i])) pool.push(i);
+    }
+  }
+  if(pool.length){gs.revealed.add(pool[Math.floor(Math.random()*pool.length)]);}
+  else{
+    const all=[];
+    for(let i=0;i<answer.length;i++) if(answer[i]!==' '&&answer[i]!=='-'&&!gs.revealed.has(i)) all.push(i);
+    if(all.length) gs.revealed.add(all[Math.floor(Math.random()*all.length)]);
+  }
+  renderTiles();
+}
+
+function calcPts(){
+  const base=Math.max(1,5-gs.attempts);
+  return Math.max(1,base-gs.hints);
+}
+
+// ═══════════════════════
+// ROUND END
+// ═══════════════════════
+function endRound(won,pts){
+  document.getElementById('guessInput').disabled=true;
+  gs.scores.push(pts);
+  gs.chars.push(gameChars[gs.round]);
+  if(won) gs.total+=pts;
+  // Build overlay
+  const ch=gameChars[gs.round];
+  // Memojis
+  const burst=document.getElementById('memojiBurst');
+  burst.innerHTML='';
+  if(won){
+    const emojis=ch.memojis;
+    emojis.forEach((e,i)=>{
+      const s=document.createElement('span');
+      s.className='memoji'; s.textContent=e;
+      s.style.setProperty('--d',(.3+i*.08)+'s');
+      s.style.setProperty('--delay',(i*.06)+'s');
+      burst.appendChild(s);
+    });
+  } else {
+    ['😬','💀','😅'].forEach((e,i)=>{
+      const s=document.createElement('span');
+      s.className='memoji'; s.textContent=e;
+      s.style.setProperty('--d','.4s');
+      s.style.setProperty('--delay',(i*.08)+'s');
+      burst.appendChild(s);
+    });
+  }
+  // Character image
+  const imgWrap=document.getElementById('charImgWrap');
+  imgWrap.className='char-img-wrap '+(ch.universe===  'marvel'?'marvel-ring':'dc-ring');
+  imgWrap.innerHTML='';
+  // Try to load image
+  const img=document.createElement('img');
+  img.className='char-img';
+  img.alt=ch.name;
+  img.onload=()=>{imgWrap.innerHTML='';imgWrap.appendChild(img);};
+  img.onerror=()=>{
+    // Fallback: show emoji in a styled div
+    imgWrap.innerHTML=`<div class="char-img-fallback" style="background:linear-gradient(135deg,${ch.universe==='marvel'?'rgba(230,36,41,.3)':'rgba(0,116,232,.3)'},rgba(0,0,0,.5))"><span style="font-size:70px">${ch.emoji}</span></div>`;
+  };
+  img.src=ch.img;
+  // Title & greeting
+  const titles=won?['BRILLIANT!','CORRECT!','NAILED IT!','AMAZING!','YOU GOT IT!']:['TIMES UP!','SO CLOSE!','GAME ON!'];
+  document.getElementById('rTitle').textContent=won?titles[Math.min(pts-1,titles.length-1)]:'TIMES UP!';
+  document.getElementById('rTitle').style.color=won?'var(--gold)':'var(--red)';
+  if(won){
+    const greet=ch.greetings[Math.floor(Math.random()*ch.greetings.length)].replace(/{name}/g,playerName);
+    document.getElementById('rGreeting').textContent=greet;
+  } else {
+    document.getElementById('rGreeting').textContent=`Keep going, ${playerName}! You've got this.`;
+  }
+  document.getElementById('rAnswer').innerHTML=ch.name;
+  const pe=document.getElementById('ptsBig');
+  pe.textContent=won?'+'+pts:'+0';
+  pe.className='pts-big '+(pts>0?'pos':'zero');
+  // Breakdown
+  let bd='';
+  if(won){
+    const base=Math.max(1,5-gs.attempts);
+    bd+=`<span>Attempt ${gs.attempts+1} base score:</span> +${base} pts<br>`;
+    if(gs.hints>0) bd+=`<span>Hint penalty:</span> −${gs.hints} pt${gs.hints>1?'s':''}<br>`;
+    bd+=`<span>Round total:</span> ${pts} / 5`;
+  } else {
+    bd=`<span>The answer was ${ch.name}.</span><br>Don't give up — ${5-gs.round-1>0?`${5-gs.round-1} rounds to go!`:'Final score coming up!'}`;
+  }
+  document.getElementById('ptsBreak').innerHTML=bd;
+  document.getElementById('nextBtn').textContent=gs.round>=4?'SEE FINAL SCORE →':'NEXT ROUND →';
+  document.getElementById('roundOverlay').classList.add('show');
+}
+
+function nextRound(){
+  document.getElementById('roundOverlay').classList.remove('show');
+  if(gs.round>=4){showFinal();return;}
+  gs.round++;
+  updateProgress();
+  loadRound();
+}
+
+// ═══════════════════════
+// FINAL SCREEN
+// ═══════════════════════
+function showFinal(){
+  document.getElementById('gameScreen').classList.add('out');
+  const s=gs.total;
+  document.getElementById('fScore').textContent=s;
+  let rank,rc,rt;
+  if(s===25){rank='S';rc='rank-S';rt='⭐ PERFECT SCORE — MULTIVERSE MASTER ⭐';}
+  else if(s>=20){rank='A';rc='rank-A';rt='🏆 INCREDIBLE — True Hero Level';}
+  else if(s>=14){rank='B';rc='rank-B';rt='⚡ SOLID — Sidekick Material';}
+  else{rank='C';rc='rank-C';rt='📖 Study Up, Hero!';}
+  document.getElementById('fPlayer').textContent=`Well played, ${playerName}! ${rt}`;
+  const badge=document.getElementById('rankBadge');
+  badge.textContent='RANK '+rank; badge.className='rank-badge '+rc;
+  const recap=document.getElementById('recap');
+  recap.innerHTML=gs.chars.map((ch,i)=>{
+    const pts=gs.scores[i];
+    const star=pts===5?'⭐':pts>=3?'✅':pts>0?'✔️':'❌';
+    return `<div class="recap-row">
+      <span class="recap-char">${star} ${ch.emoji} ${ch.name} <span style="font-size:11px;color:var(--muted)">(${ch.universe.toUpperCase()})</span></span>
+      <span class="recap-pts ${pts===0?'z':''}">${pts>0?'+'+pts:'0'}</span>
+    </div>`;
+  }).join('');
+  setTimeout(()=>document.getElementById('finalScreen').classList.add('show'),300);
+}
+
+function resetGame(){
+  document.getElementById('finalScreen').classList.remove('show');
+  document.getElementById('gameScreen').classList.add('out');
+  setTimeout(()=>{
+    document.getElementById('nameScreen').classList.remove('out');
+    document.getElementById('nameInput').value='';
+    document.getElementById('beginBtn').disabled=true;
+  },350);
+}
+
+// ═══════════════════════
+// FEEDBACK
+// ═══════════════════════
+let fbT;
+function showFeedback(msg,type){
+  const el=document.getElementById('feedback');
+  el.textContent=msg; el.className=`feedback show ${type}`;
+  clearTimeout(fbT); fbT=setTimeout(()=>el.className='feedback',2200);
+}
+</script>
+</body>
+</html>
